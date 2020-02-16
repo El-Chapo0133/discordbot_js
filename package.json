@@ -1,0 +1,40 @@
+{
+  "name": "discordbot_js",
+  "version": "0.0.0",
+  "description": "simple discord bot to do almost everything",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/El-Chapo0133/discordbot_js.git"
+  },
+  "keywords": [
+    "js",
+    "nodejs",
+    "discord",
+    "mongodb\u001b[D\u001b[C",
+    "tensorflow",
+    "bot"
+  ],
+  "author": "Loris Levêque",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/El-Chapo0133/discordbot_js/issues"
+  },
+  "homepage": "https://github.com/El-Chapo0133/discordbot_js#readme",
+  "devDependencies": {
+    "@discordjs/uws": "^10.149.0",
+    "@tensorflow/tfjs": "^1.5.2",
+    "@tensorflow/tfjs-node": "^1.5.2",
+    "@tensorflow/tfjs-node-gpu": "^1.5.2",
+    "bufferutil": "^4.0.1",
+    "discord.js": "^11.5.1",
+    "fs": "0.0.1-security",
+    "libsodium-wrappers": "^0.7.6",
+    "node-gyp": "^6.1.0",
+    "opusscript": "0.0.6",
+    "rebuild": "^0.1.2"
+  }
+}
