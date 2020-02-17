@@ -24,10 +24,15 @@ const logger = require(`${CONSTANTS.entry_point}/src/logger/logger.js`);
 
 reader.readFile(`${__dirname}/_resources/data_bot.json`, (bot_data) => {
 	bot.login(bot_data.toJson().bot_token);
-
-	bot.on('ready', () => {
-		// Bot online
-		logger.write("bot online");
-	});
 });
 
+bot.on('ready', () => {
+	// Bot online
+	logger.write("bot online");
+});
+bot.on('message', (e) => {
+	// message received
+	if (e.message.startsWith('_')) {
+		let command = root.prepare(e);
+	} 
+});
