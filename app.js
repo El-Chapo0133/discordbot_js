@@ -18,11 +18,11 @@ const bot = new Discord.Client();
 
 // my files
 const CONSTANTS = require(`${__dirname}/constants.js`);
-const reader = require(`${CONSTANTS.entry_point}/src/reader/reader.js`);
+const fileSystem = require(`${CONSTANTS.entry_point}/src/fileSystem/fileSystem.js`);
 const logger = require(`${CONSTANTS.entry_point}/src/logger/logger.js`);
 
 
-reader.readFile(`${__dirname}/_resources/data_bot.json`, (bot_data) => {
+fileSystem.readFile(`${__dirname}/_resources/data_bot.json`, (bot_data) => {
 	bot.login(bot_data.toJson().bot_token);
 });
 
@@ -34,5 +34,11 @@ bot.on('message', (e) => {
 	// message received
 	if (e.message.startsWith('_')) {
 		let command = root.prepare(e);
+		e.channel.send(`> ${command}`);
+		root.execute(command);
 	} 
+});
+bot.on('guildMemberAdd', (e) => {
+	// new member in the server
+	console.log(e);
 });

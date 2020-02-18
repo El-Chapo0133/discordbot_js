@@ -10,16 +10,18 @@ class Api {
 	constructor() {
 
 	}
-	getGithubFile(e) {
-		const OPTIONS = {
+	async getGithubFile(e) {
+		if (e.author === "undefined" || e.repo === "undefined")
+			return "ERR! missing params"
+		new GithubContent({
 			owner: e.author,
 			repo: e.repo,
-			branch: e.branch
-		}
-		let githubContent = new GithubContent(OPTIONS);
-		githubContent.file(e.filename, (err, data) => {
-			if (err)
-				throw(err);
+			branch: e.branch === "undefiend" ? 'master' : e.branch
+		}).file(e.filename, (err, data) => {
+			if (err) {
+				logger.write(`ERR! ${err}`);
+				return null;
+			}
 			else {
 				return file.content.toString();
 			}
