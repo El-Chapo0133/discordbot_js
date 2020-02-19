@@ -150,3 +150,7 @@ Array.prototype.last = function() {
 Array.prototype.first = function() {
 	return this.valueOf()[0];
 }
+Array.prototype.print = function() {
+	console.log(`|Time:${Date.now()}`);
+	console.log(`|-${this.valueOf()}`);
+}
