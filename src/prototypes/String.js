@@ -3,7 +3,7 @@ String.prototype.toJson = function() {
 }
 String.prototype.removeFirstChar = function() {
 	const _$ = this.valueOf();
-	return _$.substring(1, _$.length - 1);
+	return _$.substring(1, _$.length);
 }
 String.prototype.toInt = function() {
 	return parseInt(this.valueOf());

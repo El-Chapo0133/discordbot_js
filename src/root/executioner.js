@@ -5,7 +5,7 @@
  */
 
 const CONSTANTS = require(`${__dirname}/../../constants.js`);
-const api = require(`${CONSTANTS.entry_point}/src/api/api.js`);
+const api = require(`${CONSTANTS.src}/api/api.js`);
 
 // all function in this class is a function of the bot
 // Ex: a function is named "ping", then you can type "!ping" to the bot
@@ -15,19 +15,20 @@ class Executioner {
 
 	}
 	ping(e) {
-		e.channel.send("Pong!");
+		e.channel.send('Pong!');
 		return;
 	}
 	githubFile(e) {
-		api.githubFile({
+		api.getGithubFile({
 			author: e.params.author,
 			repo: e.params.repo,
+			filename: e.params.filename,
 			branch: e.params.branch
-		}).then((data) => {
+		}, (data) => {
 			e.channel.send("```" + data + "```");
 		});
 		return;
 	}
 }
 
-module.exports = new Executionner();
+module.exports = new Executioner();

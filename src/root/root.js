@@ -5,7 +5,7 @@
  */
 
 //const CONSTANT = require(`${__dirname}/../../constants.js`);
-const executioner = require(`${__dirname}/execitioner.js`);
+const executioner = require(`${__dirname}/executioner.js`);
 
 class Root {
 	constructor() {
@@ -14,9 +14,9 @@ class Root {
 	prepare(e) {
 		const content_splitted = e.content.split(' ');
 		let params = {};
-		const name = content_splitted[index];
-		const value = content_splitted[index + 1];
-		for (var index = 1; index < content_splitted; index += 2) {
+		for (var index = 1; index < content_splitted.length; index += 2) {
+			const name = content_splitted[index];
+			const value = content_splitted[index + 1];
 			if (name.startsWith('-') && !value.startsWith('-'))
 				params[name.removeFirstChar()] = value;
 		}
@@ -24,9 +24,9 @@ class Root {
 			type: e.content == "!config" ? "config" : "command",
 			title: content_splitted[0].removeFirstChar(),
 			timestamp: Date.now(),
-			params: [...params],
+			params: params,
 			channel: e.channel,
-			author: e.message.author,
+			author: e.author,
 		};
 	}
 	execute(e) {

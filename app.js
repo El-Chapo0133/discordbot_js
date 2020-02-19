@@ -20,6 +20,7 @@ const bot = new Discord.Client();
 const CONSTANTS = require(`${__dirname}/constants.js`);
 const fileSystem = require(`${CONSTANTS.entry_point}/src/fileSystem/fileSystem.js`);
 const logger = require(`${CONSTANTS.entry_point}/src/logger/logger.js`);
+const root = require(`${CONSTANTS.src}/root/root.js`);
 
 
 fileSystem.readFile(`${__dirname}/_resources/data_bot.json`, (bot_data) => {
@@ -32,9 +33,10 @@ bot.on('ready', () => {
 });
 bot.on('message', (e) => {
 	// message received
-	if (e.message.startsWith('_')) {
+	if (e.content.startsWith('_')) {
 		let command = root.prepare(e);
-		e.channel.send(`> ${command}`);
+		console.log(command);
+		//e.channel.send(`> ${command}`);
 		root.execute(command);
 	} 
 });
