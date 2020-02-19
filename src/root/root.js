@@ -14,9 +14,11 @@ class Root {
 	prepare(e) {
 		const content_splitted = e.content.split(' ');
 		let params = {};
+		const name = content_splitted[index];
+		const value = content_splitted[index + 1];
 		for (var index = 1; index < content_splitted; index += 2) {
-			if (content_splitted[index].startsWith('-') && !content_splitted[index + 1].startsWith('-'))
-				params[content_splitted[index].removeFirstChar()] = content_splitted[index + 1];
+			if (name.startsWith('-') && !value.startsWith('-'))
+				params[name.removeFirstChar()] = value;
 		}
 		return {
 			type: e.content == "!config" ? "config" : "command",
