@@ -80,11 +80,12 @@ Array.prototype.parse = function(index_start, index_end) {
 	return [...toReturn];
 }
 Array.prototype.has = function(_value) {
+	let toReturn = false;
 	this.valueOf().forEach((cell) => {
 		if (cell == _value)
-			return true;
+			toReturn = true;
 	});
-	return false;
+	return toReturn;
 }
 Array.prototype.isInRange = function(_index) {
 	return this.valueOf().length > _index;

@@ -22,15 +22,23 @@ class Root {
 		}
 		return {
 			type: e.content == "!config" ? "config" : "command",
-			title: content_splitted[0].removeFirstChar(),
+			fullcontent: e.content,
+			title: content_splitted[0].removeFirstChar().toLowerCase(),
 			timestamp: Date.now(),
 			params: params,
 			channel: e.channel,
 			author: e.author,
+			member: e.member,
+			guild: e.guild,
 		};
 	}
 	execute(e) {
-		return executioner[e.title](e);
+		//try {
+		console.log(e.title);
+			return executioner[e.title](e);
+		/*} catch {
+			return console.log(`Unreconised command:${e.fullcontent}`);
+		}*/
 	}
 	get(e) {
 

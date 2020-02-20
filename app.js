@@ -35,7 +35,7 @@ bot.on('message', (e) => {
 	// message received
 	if (e.content.startsWith('_')) {
 		let command = root.prepare(e);
-		console.log(command);
+		//console.log(command);
 		//e.channel.send(`> ${command}`);
 		root.execute(command);
 	} 
