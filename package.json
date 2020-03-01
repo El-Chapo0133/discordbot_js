@@ -36,6 +36,7 @@
     "libsodium-wrappers": "^0.7.6",
     "node-gyp": "^6.1.0",
     "opusscript": "0.0.6",
-    "rebuild": "^0.1.2"
+    "rebuild": "^0.1.2",
+    "ytdl-core": "^2.0.0"
   }
 }

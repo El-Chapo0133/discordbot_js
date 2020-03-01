@@ -4,6 +4,8 @@
  * Description : Execute commands from root.js
  */
 
+const ytdl = require('ytdl-core')
+
 const CONSTANTS = require(`${__dirname}/../../constants.js`);
 const api = require(`${CONSTANTS.src}/api/api.js`);
 const fileSystem = require(`${CONSTANTS.src}/fileSystem/fileSystem.js`);
@@ -65,6 +67,42 @@ class Executioner {
 			}
 		});
 		return e.channel.send("```" + toshow + "```");
+	}
+	play(e) {
+		const music = e.params.music;
+		const voiceChannel = message.member.voiceChannel;
+		if (!voiceChannel) {
+			return e.channel.send("You must be in a channel");
+		} else {
+			const songInfo = ytdl.getInfo(music).then(() => {
+				try {
+					voiceChannel.join().then((connection) => {
+						connection.playStream(ytdl(songInfo.url)).on('end', () => {
+							connection.leave();
+						}).on('error', (err) => {
+							console.log(err);
+							connexion.leave();
+						});
+					});
+				} catch (err) {
+					console.log(err);
+					return;
+				}
+			});
+		}
+	}
+	skip(e) {
+
+	}
+	pause(e) {
+
+	}
+	resume(e) {
+		
+	}
+	disconnect(e) {
+		const voiceChannel = message.member.voiceChannel;
+		voiceChannel.leave();
 	}
 }
 
