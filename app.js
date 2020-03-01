@@ -5,10 +5,11 @@
  *
  * file to run to lunch the bot
  */
+const CONSTANTS = require(`${__dirname}/constants.js`);
 
 // customs prototypes
-require(`${__dirname}/src/prototypes/String.js`);
-require(`${__dirname}/src/prototypes/Array.js`);
+require(`${CONSTANTS.src}/prototypes/String.js`);
+require(`${CONSTANTS.src}/prototypes/Array.js`);
 
 // discord deps
 const Discord = require("discord.js");
@@ -17,13 +18,12 @@ const bot = new Discord.Client();
 // generics deps
 
 // my files
-const CONSTANTS = require(`${__dirname}/constants.js`);
-const fileSystem = require(`${CONSTANTS.entry_point}/src/fileSystem/fileSystem.js`);
-const logger = require(`${CONSTANTS.entry_point}/src/logger/logger.js`);
+const fileSystem = require(`${CONSTANTS.src}/fileSystem/fileSystem.js`);
+const logger = require(`${CONSTANTS.src}/logger/logger.js`);
 const root = require(`${CONSTANTS.src}/root/root.js`);
 
 
-fileSystem.readFile(`${__dirname}/_resources/data_bot.json`, (bot_data) => {
+fileSystem.readFile(`${CONSTANTS.resources}/data_bot.json`, (bot_data) => {
 	bot.login(bot_data.toJson().bot_token);
 });
 

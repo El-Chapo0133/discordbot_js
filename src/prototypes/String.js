@@ -5,6 +5,10 @@ String.prototype.removeFirstChar = function() {
 	const _$ = this.valueOf();
 	return _$.substring(1, _$.length);
 }
+String.prototype.removeLastChar = function() {
+	const _$ = this.valueOf();
+	return _$.substring(0, _$.length - 1);
+}
 String.prototype.toInt = function() {
 	return parseInt(this.valueOf());
 }
@@ -58,4 +62,14 @@ String.prototype.parse = function(_index) {
 			second += _$[index];
 	}
 	return [first, second];
+}
+String.prototype.removeChar = function(input) {
+	return this.valueOf().split(input).collapse();
+}
+String.prototype.removeChars = function(inputs) {
+	var toReturn = this.valueOf();
+	inputs.forEach(cell => {
+		toReturn = toReturn.split(cell).collapse();
+	});
+	return toReturn;
 }

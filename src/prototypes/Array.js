@@ -32,6 +32,18 @@ Array.prototype.collapse = function() {
 	})
 	return toReturn;
 }
+Array.prototype.collapseWith = function(input) {
+	var toReturn = "";
+	const _$ = this.valueOf();
+	for (var index = 0; index < _$.length; index++) {
+		if (index != _$.length - 1) {
+			toReturn += _$[index] + input;
+		} else {
+			toReturn += _$[index]
+		}
+	}
+	return toReturn;
+}
 Array.prototype.clone = function() {
 	return [...this.valueOf()];
 }

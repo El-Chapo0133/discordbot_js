@@ -28,6 +28,7 @@ class Executioner {
 		return;
 	}
 	githubfile(e) {
+		console.log(e.params);
 		api.getGithubFile({
 			author: e.params.author,
 			repo: e.params.repo,
@@ -70,22 +71,26 @@ class Executioner {
 	}
 	play(e) {
 		const music = e.params.music;
-		const voiceChannel = message.member.voiceChannel;
+		const voiceChannel = e.member.voiceChannel;
 		if (!voiceChannel) {
 			return e.channel.send("You must be in a channel");
 		} else {
-			const songInfo = ytdl.getInfo(music).then(() => {
+			ytdl.getInfo(music).then((songInfo) => {
+				console.log(songInfo.title);
 				try {
 					voiceChannel.join().then((connection) => {
-						connection.playStream(ytdl(songInfo.url)).on('end', () => {
+						connection.playStream(ytdl(songInfo.video_url)).on('end', () => {
+							console.log("bonsoir!");
 							connection.leave();
 						}).on('error', (err) => {
 							console.log(err);
-							connexion.leave();
+							connection.leave();
 						});
+					}).catch(err => {
+						console.log(err);
 					});
 				} catch (err) {
-					console.log(err);
+					console.log("err " + err);
 					return;
 				}
 			});
@@ -101,8 +106,14 @@ class Executioner {
 		
 	}
 	disconnect(e) {
-		const voiceChannel = message.member.voiceChannel;
+		const voiceChannel = e.member.voiceChannel;
 		voiceChannel.leave();
+		return;
+	}
+	dc(e) {
+		const voiceChannel = e.member.voiceChannel;
+		voiceChannel.leave();
+		return;
 	}
 }
 
