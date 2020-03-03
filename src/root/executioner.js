@@ -9,6 +9,7 @@ const ytdl = require('ytdl-core')
 const CONSTANTS = require(`${__dirname}/../../constants.js`);
 const api = require(`${CONSTANTS.src}/api/api.js`);
 const fileSystem = require(`${CONSTANTS.src}/fileSystem/fileSystem.js`);
+const queue = require(`${CONSTANTS.src}/music/musicQueue.js`);
 
 let BANNEDFUNCTIONS;
 
@@ -76,22 +77,36 @@ class Executioner {
 			return e.channel.send("You must be in a channel");
 		} else {
 			ytdl.getInfo(music).then((songInfo) => {
-				console.log(songInfo.title);
-				try {
-					voiceChannel.join().then((connection) => {
-						connection.playStream(ytdl(songInfo.video_url)).on('end', () => {
-							console.log("bonsoir!");
-							connection.leave();
-						}).on('error', (err) => {
+				e.channel.send(`\`\`\` added to queue '${songInfo.title}' \`\`\``)
+				if (queue.isEmpty()) {
+					try {
+						voiceChannel.join().then((connection) => {
+							connection.playStream(ytdl(songInfo.video_url)).on('end', () => {
+								//queue.shift();
+								/*if (queue.isEmpty()) {
+									connection.leave();
+								} else {
+									play(e)
+								}*/
+								play(e)
+							}).on('error', (err) => {
+								console.log(err);
+								//connection.leave();
+							});
+						}).catch(err => {
 							console.log(err);
-							connection.leave();
 						});
-					}).catch(err => {
-						console.log(err);
+					} catch (err) {
+						console.log("err " + err);
+						return;
+					}
+				} else {
+					queue.add({
+						title: songInfo.title,
+						url: songInfo.video_url,
+						connection: connection
 					});
-				} catch (err) {
-					console.log("err " + err);
-					return;
+					console.log(queue.isEmpty())
 				}
 			});
 		}
