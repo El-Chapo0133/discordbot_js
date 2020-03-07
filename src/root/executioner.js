@@ -12,6 +12,8 @@ const fileSystem = require(`${CONSTANTS.src}/fileSystem/fileSystem.js`);
 const queue = require(`${CONSTANTS.src}/music/musicQueue.js`);
 
 let BANNEDFUNCTIONS;
+let bifferConnection = null;
+let bufferVoiceChannel = null;
 
 fileSystem.readFile(`${CONSTANTS.resources}/static.json`, (data) => {
 	BANNEDFUNCTIONS = (data.toJson().banned_functions);
@@ -76,23 +78,21 @@ class Executioner {
 		if (!voiceChannel) {
 			return e.channel.send("You must be in a channel");
 		} else {
+			bufferVoiceChannel = voiceChannel;
 			ytdl.getInfo(music).then((songInfo) => {
-				e.channel.send(`\`\`\` added to queue '${songInfo.title}' \`\`\``)
+				//console.log({songInfo: songInfo});
+				e.channel.send(`\`\`\`added to queue:\n'${songInfo.title}'\nsong in queue: ${queue.length() + 1}\`\`\``)
 				if (queue.isEmpty()) {
 					try {
 						voiceChannel.join().then((connection) => {
-							connection.playStream(ytdl(songInfo.video_url)).on('end', () => {
-								//queue.shift();
-								/*if (queue.isEmpty()) {
-									connection.leave();
-								} else {
-									play(e)
-								}*/
-								play(e)
-							}).on('error', (err) => {
-								console.log(err);
-								//connection.leave();
+							bifferConnection = connection;
+							queue.add({
+								title: songInfo.title,
+								url: songInfo.video_url,
+								connection: connection,
+								voiceChannel: voiceChannel
 							});
+							playMusic(queue.first())
 						}).catch(err => {
 							console.log(err);
 						});
@@ -104,39 +104,89 @@ class Executioner {
 					queue.add({
 						title: songInfo.title,
 						url: songInfo.video_url,
-						connection: connection
+						connection: bifferConnection,
+						voiceChannel: voiceChannel
 					});
-					console.log(queue.isEmpty())
 				}
+			}).catch(() => {
+				e.channel.send("Error in music input");
 			});
 		}
 	}
 	skip(e) {
-
+		try {
+			if (queue.length() === 1) {
+				queue.first().dispatcher.end();
+				playMusic(queue.second());
+			}
+			queue.shift();
+			e.channel.send("> successfully skiped")
+		} catch(exception) {
+			console.log({exception: exception});
+			e.channel.send("> error on skip method");
+		}
+	}
+	loop(e) {
+		queue.toggleLoop();
+		e.channel.send(queue.isLooped() === true ? "> Loop enabled" : "> Loop disabled")
 	}
 	pause(e) {
-
+		queue.first().dispatcher.pause();
 	}
 	resume(e) {
-		
+		queue.first().dispatcher.resume();
 	}
 	disconnect(e) {
-		const voiceChannel = e.member.voiceChannel;
-		voiceChannel.leave();
+		queue.clear();
+		bufferVoiceChannel.leave();
 		return;
 	}
 	dc(e) {
-		const voiceChannel = e.member.voiceChannel;
-		voiceChannel.leave();
+		queue.clear();
+		bufferVoiceChannel.leave();
 		return;
+	}
+	np(e) {
+		e.channel.send(`> Now Playing: ${queue.first().title}`)
+	}
+	queue(e) {
+		const copyQueue = queue.getAll();
+		const LENGTH = copyQueue.length;
+		let toPrint = `loop activated: ${queue.isLooped()}\n`;
+		for (let i = 0; i < LENGTH; i++) {
+			toPrint += `> ${i}: ${copyQueue[i].title}\n`;
+		}
+		e.channel.send(toPrint);
 	}
 }
 
+function playMusic(e) {
+	//console.log(`now playing ${e.title}`);
+	queue.first().dispatcher = e.connection.playStream(ytdl(e.url)).on('end', () => {
+		if (queue.isLooped()) {
+			replay(queue.first())
+		} else {
+			queue.shift();
+			if (!queue.isEmpty()) {
+				playMusic(queue.first());
+			} else {
+				e.voiceChannel.leave();
+			}
+		}
+		
+	}).on('error', (err) => {
+		console.log(err);
+		e.voiceChannel.leave();
+	});
+}
+function replay(e) {
+	playMusic(e)
+}
 function getAllProperties(obj) {
 	let properties = new Set();
   	let currentObj = obj;
   	do {
-    	Object.getOwnPropertyNames(currentObj).map(item => properties.add(item));
+		Object.getOwnPropertyNames(currentObj).map(item => properties.add(item));
   	} while ((currentObj = Object.getPrototypeOf(currentObj)))
 	return [...properties.keys()].filter(item => typeof obj[item] === 'function');
 }

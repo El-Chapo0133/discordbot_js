@@ -4,35 +4,48 @@
  * Description : Provide a queue for the music
  */
 
-let queue = [
-
-]
-
-
 class Queue {
+	constructor() {
+		this.queue = [];
+		this.loop = false;
+	}
 	add(e) {
-		/*let newItem = Struct() {
-			e.title,
-			e.url,
-			e.connection
-		};*/
-		queue.push("test");
+		this.queue.push(e);
+		//console.log({queue: this.queue})
 	}
 	remove(e) {
 		let index = 0;
-		queue = queue.map(cell => {
+		this.queue = this.queue.map(cell => {
 			if (index++ != e.id)
 				return cell;
 		})
 	}
 	shift(e) {
-		queue.shift();
+		this.queue.shift();
 	}
 	clear() {
-		queue = [];
+		this.queue = [];
+	}
+	first() {
+		return this.queue[0];
+	}
+	second() {
+		return this.queue[1];
 	}
 	isEmpty() {
-		return queue.length === 0;
+		return this.queue.length === 0;
+	}
+	toggleLoop() {
+		this.loop = this.loop === false ? true : false;
+	}
+	isLooped() {
+		return this.loop;
+	}
+	length() {
+		return this.queue.length;
+	}
+	getAll() {
+		return this.queue;
 	}
 }
 

@@ -38,7 +38,7 @@ class Root {
 	}
 	execute(e) {
 		try {
-			console.log(`|${e.title}|`);
+			//console.log(`|${e.title}|`);
 			return executioner[e.title](e);
 		} catch (err) {
 			return console.log(`err:${err}`);
