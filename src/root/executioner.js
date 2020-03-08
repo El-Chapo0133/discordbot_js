@@ -4,7 +4,15 @@
  * Description : Execute commands from root.js
  */
 
-const ytdl = require('ytdl-core')
+const ytdl = require('ytdl-core');
+const tenorjs = require('tenorjs').client({
+	"Key": "AP6FGDBWE5CC",
+	"Filter": "off", 
+	"Locale": "en_US", 
+	"MediaFilter": "minimal", 
+	"DateFormat": "D/MM/YYYY - H:mm:ss A"
+});
+const cron = require('node-cron');
 
 const CONSTANTS = require(`${__dirname}/../../constants.js`);
 const api = require(`${CONSTANTS.src}/api/api.js`);
@@ -12,8 +20,9 @@ const fileSystem = require(`${CONSTANTS.src}/fileSystem/fileSystem.js`);
 const queue = require(`${CONSTANTS.src}/music/musicQueue.js`);
 
 let BANNEDFUNCTIONS;
-let bifferConnection = null;
+let bufferConnection = null;
 let bufferVoiceChannel = null;
+let bufferChannel = null;
 
 fileSystem.readFile(`${CONSTANTS.resources}/static.json`, (data) => {
 	BANNEDFUNCTIONS = (data.toJson().banned_functions);
@@ -31,15 +40,18 @@ class Executioner {
 		return;
 	}
 	githubfile(e) {
-		console.log(e.params);
-		api.getGithubFile({
-			author: e.params.author,
-			repo: e.params.repo,
-			filename: e.params.filename,
-			branch: e.params.branch
-		}, (data) => {
-			e.channel.send("```" + data + "```");
-		});
+		try {
+			api.getGithubFile({
+				author: e.params.author,
+				repo: e.params.repo,
+				filename: e.params.filename,
+				branch: e.params.branch
+			}, (data) => {
+				e.channel.send("```" + data + "```");
+			});
+		} catch (exception) {
+			e.channel.send("Error, check if the file exists and if the file is 2000 chars or lower");
+		}
 		return;
 	}
 	assign(e) {
@@ -85,7 +97,7 @@ class Executioner {
 				if (queue.isEmpty()) {
 					try {
 						voiceChannel.join().then((connection) => {
-							bifferConnection = connection;
+							bufferConnection = connection;
 							queue.add({
 								title: songInfo.title,
 								url: songInfo.video_url,
@@ -104,7 +116,7 @@ class Executioner {
 					queue.add({
 						title: songInfo.title,
 						url: songInfo.video_url,
-						connection: bifferConnection,
+						connection: bufferConnection,
 						voiceChannel: voiceChannel
 					});
 				}
@@ -115,12 +127,7 @@ class Executioner {
 	}
 	skip(e) {
 		try {
-			if (queue.length() === 1) {
-				queue.first().dispatcher.end();
-				playMusic(queue.second());
-			}
-			queue.shift();
-			e.channel.send("> successfully skiped")
+			queue.first().dispatcher.end();
 		} catch(exception) {
 			console.log({exception: exception});
 			e.channel.send("> error on skip method");
@@ -158,8 +165,40 @@ class Executioner {
 		}
 		e.channel.send(toPrint);
 	}
+	gif(e) {
+		if (String(e.params.keys) === "undefined") {
+			e.channel.send("Param unknown");
+			return;
+		}
+		try {
+			tenorjs.Search.Random(e.params.keys, "1").then(results => {
+				results.forEach(cell => {
+					e.channel.send(cell.url);
+				});
+			});
+		} catch (exception) {
+			console.log(exception);
+			e.channel.send("Error handling gif");
+		}
+	}
+	startcron(e) {
+		bufferChannel = e.channel;
+		cron.schedule('* * 20 * Fri', () => {
+			bufferChannel.send("https://tenor.com/FR5a.gif");
+		}, {
+			scheduled: true,
+			timezone: "Europe/Berlin"
+		});
+		e.channel.send(`Started cron on channel '${e.channel.name}'`);
+	}
+	pee(e) {
+		e.channel.send("https://tenor.com/view/pee-gif-5212091");
+	}
 }
 
+function getRandom(min,max) {
+	return Math.round((Math.random(min, max) * max));
+}
 function playMusic(e) {
 	//console.log(`now playing ${e.title}`);
 	queue.first().dispatcher = e.connection.playStream(ytdl(e.url)).on('end', () => {
@@ -173,7 +212,6 @@ function playMusic(e) {
 				e.voiceChannel.leave();
 			}
 		}
-		
 	}).on('error', (err) => {
 		console.log(err);
 		e.voiceChannel.leave();
