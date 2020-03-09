@@ -167,3 +167,12 @@ Array.prototype.print = function() {
 	console.log(`|Time:${Date.now()}`);
 	console.log(`|-${this.valueOf()}`);
 }
+Array.prototype.getMedian = function() {
+	const array = this.valueOf().sort();
+	const LENGTH = array.length;
+	if (_$.length % 2 == 0) {
+		return array[LENGTH / 2] + ((array[LENGTH] + array[LENGTH + 1]) / 2);
+	} else {
+		return array[(LENGTH + 1) / 2];
+	}
+}
