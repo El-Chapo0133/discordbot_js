@@ -12,7 +12,7 @@ const default_configs {
 		hiddenLayers: [1],
 		activation: 'sigmoid', // from ['sigmoid', 'relu', 'leaky-relu', 'tanh']
 		leakyReluAlpha: 0.01,
-		outputSize: 20,
+		outputSize: 1,
 		learningRate: 0.01,
 		decayRate: 0.999,
 	},
