@@ -128,6 +128,7 @@ class Executioner {
 	skip(e) {
 		try {
 			queue.first().dispatcher.end();
+			e.channel.send("> Skiped successfully");
 		} catch(exception) {
 			console.log({exception: exception});
 			e.channel.send("> error on skip method");
@@ -137,11 +138,44 @@ class Executioner {
 		queue.toggleLoop();
 		e.channel.send(queue.isLooped() === true ? "> Loop enabled" : "> Loop disabled")
 	}
+	loopqueue(e) {
+		queue.toggleLoopQueue();
+		e.channel.send(queue.isQueueLooped() === true ? "> Loop queue enabled" : "> Loop queue disabled")
+	}
 	pause(e) {
 		queue.first().dispatcher.pause();
 	}
 	resume(e) {
 		queue.first().dispatcher.resume();
+	}
+	remove(e) {
+		try {
+			queue.remove({id:e.params.id});
+			e.channel.send(`removed the item ${e.params.id} '${queue.select({id:e.params.id})}'`);
+		} catch(exception) {
+			console.log({exception: exception});
+			e.channel.send(`Error on removing the item ${e.params.id}`);
+		}
+	}
+	move(e) {
+		try {
+			let item = queue.select({id:e.params.source});
+			let toReturn = [];
+			console.log({index_source: parseInt(e.params.dest)});
+			for (let index = 0; index < queue.length(); index++) {
+				if (index == parseInt(e.params.dest)) {
+					toReturn.push(queue.select({id:index}));
+				}
+				if (index != e.params.source) {
+					toReturn.push(queue.select({id:index}));
+				}
+			}
+			console.log({returned_queue: toReturn});
+			queue.set(toReturn);
+		} catch(exception) {
+			console.log({exception: exception});
+			e.channel.send(`> Error on moving item ${e.params.source} to ${e.params.dest}`);
+		}
 	}
 	disconnect(e) {
 		queue.clear();
@@ -157,13 +191,25 @@ class Executioner {
 		e.channel.send(`> Now Playing: ${queue.first().title}`)
 	}
 	queue(e) {
+		const init = e.params.tab === "undefined" ?  e.params.tab : 0;
 		const copyQueue = queue.getAll();
 		const LENGTH = copyQueue.length;
-		let toPrint = `loop activated: ${queue.isLooped()}\n`;
-		for (let i = 0; i < LENGTH; i++) {
+		let toPrint = `loop activated: ${queue.isLooped()}\nloopqueue activated: ${queue.isQueueLooped()}\n`;
+		for (let i = init; i < init + 20; i++) {
+			if (i >= queue.length())
+				break;
 			toPrint += `> ${i}: ${copyQueue[i].title}\n`;
 		}
 		e.channel.send(toPrint);
+	}
+	shuffle(e) {
+		try {
+			queue.shuffle();
+			e.channel.send("> Queue shuffled successfully");
+		} catch(exception) {
+			console.log({Exception: exception});
+			e.channel.send("> Error on shuffle command");
+		}
 	}
 	gif(e) {
 		if (String(e.params.keys) === "undefined") {
@@ -204,6 +250,14 @@ function playMusic(e) {
 	queue.first().dispatcher = e.connection.playStream(ytdl(e.url)).on('end', () => {
 		if (queue.isLooped()) {
 			replay(queue.first())
+		} else if (queue.isQueueLooped()) {
+			queue.add(queue.first());
+			queue.shift();
+			if (!queue.isEmpty()) {
+				playMusic(queue.first());
+			} else {
+				e.voiceChannel.leave();
+			}
 		} else {
 			queue.shift();
 			if (!queue.isEmpty()) {

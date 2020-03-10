@@ -8,6 +8,7 @@ class Queue {
 	constructor() {
 		this.queue = [];
 		this.loop = false;
+		this.loopqueue = false;
 	}
 	add(e) {
 		this.queue.push(e);
@@ -18,7 +19,7 @@ class Queue {
 		this.queue = this.queue.map(cell => {
 			if (index++ != e.id)
 				return cell;
-		})
+		});
 	}
 	shift(e) {
 		this.queue.shift();
@@ -38,15 +39,61 @@ class Queue {
 	toggleLoop() {
 		this.loop = this.loop === false ? true : false;
 	}
+	toggleLoopQueue() {
+		this.loopqueue = this.loopqueue === false ? true : false;
+	}
 	isLooped() {
 		return this.loop;
+	}
+	isQueueLooped() {
+		return this.loopqueue;
 	}
 	length() {
 		return this.queue.length;
 	}
 	getAll() {
-		return this.queue;
+		return [...this.queue];
 	}
+	set(e) {
+		//if (typeof e === "Array")
+		this.queue = e;
+	}
+	select(e) {
+		try {
+			return this.queue[e.id];
+		} catch(exception) {
+			return "undefined"
+		}
+	}
+	shuffle() {
+		let index = 0;
+		let first = this.first();
+		const newArray = shuffleArray(this.queue.map(cell => {
+			if (index++ !== 0)
+				return cell;
+		}));
+		this.queue = [first, ...removeUndefineds(newArray)];
+	}
+}
+
+function shuffleArray(a) {
+    var j, x, i;
+    for (i = a.length - 1; i > 0; i--) {
+        j = Math.floor(Math.random() * (i + 1));
+        x = a[i];
+        a[i] = a[j];
+        a[j] = x;
+    }
+    return a;
+}
+function removeUndefineds(array) {
+	var toReturn = [];
+	for (let index = 0; index < array.length; index++) {
+		if (String(array[index]) != "undefined") {
+			toReturn.push(array[index]);
+		}
+	}
+	return toReturn;
 }
 
 module.exports = new Queue();
