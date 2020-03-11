@@ -30,7 +30,7 @@ class Brain {
 	}
 	reconfig(e) {
 		// e must be a json
-		newConfigs = new default_configs;
+		newConfigs = default_configs;
 		Object.keys(e).forEach(keys => {
 			newConfigs[key] = e[key];
 		});
