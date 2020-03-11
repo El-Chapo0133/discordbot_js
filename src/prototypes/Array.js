@@ -1,7 +1,7 @@
 Array.prototype.removeIndex = function(_index) {
 	const _$ = this.valueOf();
-	var toReturn = [];
-	for (var index = 0; index < _$.length; index++) {
+	let toReturn = [];
+	for (let index = 0; index < _$.length; index++) {
 		if (index != _index)
 			toReturn.push(_$[index]);
 	}
@@ -9,8 +9,8 @@ Array.prototype.removeIndex = function(_index) {
 }
 Array.prototype.removeValue = function(_value) {
 	const _$ = this.valueOf();
-	var toReturn = [];
-	for (var index = 0; index < _$.length; index++) {
+	let toReturn = [];
+	for (let index = 0; index < _$.length; index++) {
 		if (_$[index] != _value)
 			toReturn.push(_$[index]);
 	}
@@ -26,16 +26,16 @@ Array.prototype.convertToString = function() {
 	return this.valueOf().map(String);
 }
 Array.prototype.collapse = function() {
-	var toReturn = "";
+	let toReturn = "";
 	this.valueOf().map(cell => {
 		toReturn += String(cell);
 	})
 	return toReturn;
 }
 Array.prototype.collapseWith = function(input) {
-	var toReturn = "";
+	let toReturn = "";
 	const _$ = this.valueOf();
-	for (var index = 0; index < _$.length; index++) {
+	for (let index = 0; index < _$.length; index++) {
 		if (index != _$.length - 1) {
 			toReturn += _$[index] + input;
 		} else {
@@ -51,8 +51,8 @@ Array.prototype.sumAll = function(index_start, index_end) {
 	const _$ = this.valueOf();
 	const start = index_start === "undefined" ? 0 : index_start;
 	const end = index_end === "undefined" ? _$.length : index_end;
-	var toReturn = 0;
-	for (var index = 0; index < _$.length; index++) {
+	let toReturn = 0;
+	for (let index = 0; index < _$.length; index++) {
 		if (index > start && index < end)
 			toReturn += _$[index];
 	}
@@ -62,8 +62,8 @@ Array.prototype.multiplyAll = function(index_start, index_end) {
 	const _$ = this.valueOf();
 	const start = index_start === "undefined" ? 0 : index_start;
 	const end = index_end === "undefined" ? _$.length : index_end;
-	var toReturn = 0;
-	for (var index = 0; index < _$.length; index++) {
+	let toReturn = 0;
+	for (let index = 0; index < _$.length; index++) {
 		if (index > start && index < end)
 			if (toReturn * _$[index] < Math.pow(2, 26))
 				toReturn *= _$[index];
@@ -84,8 +84,8 @@ Array.prototype.parse = function(index_start, index_end) {
 	const _$ = this.valueOf();
 	const start = index_start === "undefined" ? 0 : index_start;
 	const end = index_end === "undefined" ? _$.length : index_end;
-	var toReturn = [];
-	for (var index = 0; index < _$.length; index++) {
+	let toReturn = [];
+	for (let index = 0; index < _$.length; index++) {
 		if (index > start && index < end)
 			toReturn.push(_$[index]);
 	}
@@ -104,8 +104,8 @@ Array.prototype.isInRange = function(_index) {
 }
 Array.prototype.insert = function(_value, index) {
 	const _$ = this.valueOf();
-	var toReturn = [];
-	for (var index = 0; index < _$.length; index++) {
+	let toReturn = [];
+	for (let index = 0; index < _$.length; index++) {
 		toReturn.push(_$[index]);
 		if (index == _index)
 			toReturn.push(_value);
@@ -114,9 +114,9 @@ Array.prototype.insert = function(_value, index) {
 }
 Array.prototype.cut = function(_index) {
 	const _$ = this.valueOf();
-	var toReturn1 = [];
-	var toReturn2 = [];
-	for (var index = 0; index < _$.length; index++) {
+	let toReturn1 = [];
+	let toReturn2 = [];
+	for (let index = 0; index < _$.length; index++) {
 		if (index <= _index)
 			toReturn1.push(_$[index]);
 		else
@@ -127,14 +127,14 @@ Array.prototype.cut = function(_index) {
 Array.prototype.each = function(task) {
 	if (typeof task !== "function")
 		Throw(err);
-	var buffer;
-	for (var index = 0; index < _$.length; index++) {
+	let buffer;
+	for (let index = 0; index < _$.length; index++) {
 		task(index, _$[index], buffer, _$);
 	}
 	return buffer;
 }
 Array.prototype.iterableInt = function(arg) {
-	var type = typeof(arg) === "number";
+	let type = typeof(arg) === "number";
 	
 	if (type) {
 		return this.valueOf().map(cell => {
