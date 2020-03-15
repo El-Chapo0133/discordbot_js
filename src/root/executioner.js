@@ -18,6 +18,7 @@ const CONSTANTS = require(`${__dirname}/../../constants.js`);
 const api = require(`${CONSTANTS.src}/api/api.js`);
 const fileSystem = require(`${CONSTANTS.src}/fileSystem/fileSystem.js`);
 const queue = require(`${CONSTANTS.src}/music/musicQueue.js`);
+const brainjs = require(`${CONSTANTS.src}/deepl/brain.js`);
 
 let BANNEDFUNCTIONS;
 let bufferConnection = null;
@@ -198,7 +199,10 @@ class Executioner {
 		for (let i = init; i < init + 20; i++) {
 			if (i >= queue.length())
 				break;
-			toPrint += `> ${i}: ${copyQueue[i].title}\n`;
+			if (copyQueue[i] !== "undefined")
+				toPrint += `> ${i}: ${copyQueue[i].title}\n`;
+			else
+				toPrint += `> ${i}: Error here C:\n`;
 		}
 		e.channel.send(toPrint);
 	}
@@ -239,6 +243,20 @@ class Executioner {
 	}
 	pee(e) {
 		e.channel.send("https://tenor.com/view/pee-gif-5212091");
+	}
+	initdeeplwords(e) {
+		fileSystem.readFile(`${CONSTANTS.resources}/random_words.txt`, (data) => {
+			const DATAS = data.split('\n');
+			initBrain({
+				trains: DATAS.parse(0,1000),
+				channel: e.channel
+			});
+		})
+	}
+	getword(e) {
+		brainjs.predict({value: e.params.input}).then((result) => {
+			e.channel.send(`> output for ${e.params.input}: '${result}'`);
+		});
 	}
 }
 
@@ -281,6 +299,19 @@ function getAllProperties(obj) {
 		Object.getOwnPropertyNames(currentObj).map(item => properties.add(item));
   	} while ((currentObj = Object.getPrototypeOf(currentObj)))
 	return [...properties.keys()].filter(item => typeof obj[item] === 'function');
+}
+
+async function initBrain(e) {
+	brainjs.init();
+	//brainjs.compile();
+	console.log("[executioner] Started training");
+	brainjs.train({trains: e.trains}).then((err) => {
+		if (!err)
+			e.channel.send("Error on training [brain.js]");
+		else
+			e.channel.send("Model trainied [brain.js]");
+		return;
+	});
 }
 
 module.exports = new Executioner();
