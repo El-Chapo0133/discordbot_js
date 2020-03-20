@@ -20,6 +20,8 @@ const fileSystem = require(`${CONSTANTS.src}/fileSystem/fileSystem.js`);
 const queue = require(`${CONSTANTS.src}/music/musicQueue.js`);
 const brainjs = require(`${CONSTANTS.src}/deepl/brain.js`);
 
+const urlApiCovid = "https://coronavirus-tracker-api.herokuapp.com/v2/locations";
+
 let BANNEDFUNCTIONS;
 let bufferConnection = null;
 let bufferVoiceChannel = null;
@@ -65,8 +67,8 @@ class Executioner {
 	}
 	unassign(e) {
 		const role = e.guild.roles.find(role => role.name === e.params.role);
-		if (e.member.roles.has(role)) {
-			return e.channel.send(`You already have the ${e.params.role} role !`);
+		if (!e.member.roles.has(role)) {
+			return e.channel.send(`You haven't the ${e.params.role} role !`);
 		} else {
 			e.member.removeRole(role).catch(console.error);
 		}
@@ -245,10 +247,10 @@ class Executioner {
 		e.channel.send("https://tenor.com/view/pee-gif-5212091");
 	}
 	initdeeplwords(e) {
-		fileSystem.readFile(`${CONSTANTS.resources}/random_words.txt`, (data) => {
+		fileSystem.readFile(`${CONSTANTS.resources}/countries.txt`, (data) => {
 			const DATAS = data.split('\n');
 			initBrain({
-				trains: DATAS.parse(0,1000),
+				trains: DATAS,
 				channel: e.channel
 			});
 		})
@@ -258,8 +260,112 @@ class Executioner {
 			e.channel.send(`> output for ${e.params.input}: '${result}'`);
 		});
 	}
+	covid19(e) {
+		try {
+			api.getFromUrl({url: urlApiCovid}).then(result => {
+				const json = JSON.parse(result);
+				if (isStringEqualTrue(e.params.getCountries)) {
+					let bufferSend = [];
+					const LENGTH = json.locations.length;
+					for (let index = 0; index < LENGTH; index++) {
+						if (bufferSend.has(json.locations[index].country))
+							continue;
+						bufferSend.push(json.locations[index].country);
+					}
+					let buffer = "";
+					bufferSend.forEach(cell => {
+						buffer += `${cell}-`;
+					});
+					e.channel.send(`\`\`\`${buffer.substring(0, buffer.length - 1)}\`\`\``);
+				} else if (isStringEqualTrue(e.params.all)) {
+					let buffer = {
+						confirmed: 0,
+						deaths: 0,
+						recovered: 0,
+					};
+					json.locations.forEach(location => {
+						buffer.confirmed += location.latest.confirmed;
+						buffer.deaths += location.latest.deaths;
+						buffer.recovered += location.latest.recovered;
+					});
+					e.channel.send(`\`\`\`Total values:\nconfirmed: ${buffer.confirmed}\ndeaths: ${buffer.deaths}\nrecovered: ${buffer.recovered}\`\`\``);
+				} else if (isUndefined(e.params.countries)) {
+					let buffer = [];
+					const LENGTH = json.locations.length;
+					const countries = e.params.countries.split(' ');
+					for (let i = 0; i < LENGTH; i++) {
+						if (countries.has(json.locations[i].country)) {
+							if (!countryHas(buffer, json.locations[i].country)) {
+								buffer.push(json.locations[i]);
+								continue;
+							}
+							for (let index = 0; index < buffer.length; index++) {
+								if (buffer[index].country === json.locations[i].country) {
+									buffer[index].latest.confirmed += json.locations[i].latest.confirmed;
+									buffer[index].latest.deaths += json.locations[i].latest.deaths;
+									buffer[index].latest.recovered += json.locations[i].latest.recovered;
+									break;
+								}
+							}
+						}
+					};
+					let bufferSend = "";
+					buffer.forEach(cell => {
+						bufferSend += `> ${cell.country}\n      confirmed: ${cell.latest.confirmed}\n      deaths: ${cell.latest.deaths}\n      recovered: ${cell.latest.recovered}\n`;
+					});
+					e.channel.send(bufferSend);
+				} else if (isUndefined(e.params.country)) {
+					const LENGTH = json.locations.length;
+					let buffer = {
+						confirmed: 0,
+						deaths: 0,
+						recovered: 0,
+					};
+					json.locations.forEach(location => {
+						if (location.country === e.params.country) {
+							console.log(location);
+							buffer.confirmed += location.latest.confirmed;
+							buffer.deaths += location.latest.deaths;
+							buffer.recovered += location.latest.recovered;
+						}
+					});
+					e.channel.send(`> ${e.params.country}\n      confirmed: ${buffer.confirmed}\n      deaths: ${buffer.deaths}\n      recovered: ${buffer.recovered}`);
+				} else {
+					e.channel.send("Please choose one of those : [all,countries,country]");
+				}
+			});
+		} catch(exception) {
+			console.log({
+				title: 'Error on covid19 function',
+				exception: exception,
+			});
+		}
+	}
 }
 
+function countryHas(array, input) {
+	let buffer = false;
+	array.forEach(cell => {
+		if (cell.country === input)
+			buffer =  true;
+	});
+	return buffer;
+}
+function isUndefined(input) {
+	try {
+		const temp = input.toString();
+		return true;
+	} catch {
+		return false;
+	}
+}
+function isStringEqualTrue(input) {
+	try {
+		return input.toUpperCase() === "TRUE";
+	} catch {
+		return false;
+	}
+}
 function getRandom(min,max) {
 	return Math.round((Math.random(min, max) * max));
 }
@@ -304,12 +410,11 @@ function getAllProperties(obj) {
 async function initBrain(e) {
 	brainjs.init();
 	//brainjs.compile();
-	console.log("[executioner] Started training");
-	brainjs.train({trains: e.trains}).then((err) => {
-		if (!err)
+	brainjs.train({trains: e.trains}).then((result) => {
+		if (result.error)
 			e.channel.send("Error on training [brain.js]");
 		else
-			e.channel.send("Model trainied [brain.js]");
+			e.channel.send("```Model trainied [brain.js] in " + `${result.loops} loops\ninit loss: ${result.init}\nfinal loss: ${result.final}` + "```");
 		return;
 	});
 }

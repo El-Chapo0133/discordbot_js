@@ -36,6 +36,8 @@
     "ffmpeg-binaries": "^4.0.0",
     "fs": "0.0.1-security",
     "github-content": "^1.0.1",
+    "http": "0.0.0",
+    "https": "^1.0.0",
     "libsodium-wrappers": "^0.7.6",
     "node-cron": "^2.0.3",
     "node-gyp": "^6.1.0",

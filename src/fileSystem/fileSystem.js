@@ -21,6 +21,15 @@ class FileSystem {
 			callback(data.toString());
 		});
 	}
+	writeFile(filename, content, callback) {
+		fs.writeFile(filename, content.toString(), (err) => {
+			if (err) {
+				logger.write(`ERR! ${err}`);
+				throw(err);
+			}
+			callback();
+		});
+	}
 	save(_path) {
 		if (_path !== "undefined") {
 			const DEST = `${CONSTANTS.saves}/${_path.split('/')[_path.split('/').length - 1]}`

@@ -4,9 +4,13 @@
  * Description : Api for literally anythings C:
  */
 
+const http = require('http');
+const https = require('https');
+
 const GithubContent = require('github-content');
 const CONSTANTS = require(`${__dirname}/../../constants.js`);
 const logger = require(`${CONSTANTS.src}/logger/logger.js`);
+
 
 class Api {
 	constructor() {
@@ -27,6 +31,22 @@ class Api {
 			else {
 				callback(data.contents.toString());
 			}
+		});
+	}
+	async getFromUrl(e) {
+		return new Promise((resolve, reject) => {
+			const client = e.url.toString().indexOf('https') === 0 ? https : http;
+			client.get(e.url, res => {
+				let data = '';
+				res.on('data', chunk => {
+					data += chunk;
+				});
+				res.on('end', () => {
+					resolve(data)
+				});
+			}).on('error', err => {
+				reject(err);
+			});
 		});
 	}
 }
