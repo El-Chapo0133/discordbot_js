@@ -5,8 +5,6 @@
  * Doc : https://github.com/BrainJS/brain.js
  */
 
-const LOOPS = 500;
-
 const default_configs = {
 	brain_type: "recurrent.LSTM",
 	network_config: {
@@ -19,14 +17,16 @@ const default_configs = {
 		decayRate: 0.999,
 	},
 	train_config: {
-		iterations: LOOPS,
+		iterations: 0,
 		errorThresh: 0.005,
-		log: false,
+		log: true,
 		logPeriod: 1,
 		callback: onBatchEnd,
 		callbackPeriod: 1,
 	}
 }
+
+let LOOPS = 0;
 
 const brain = require('brain.js');
 
@@ -56,6 +56,10 @@ class Brain {
 	}
 	async train(e) {
 		try {
+			this.configs.train_config.iterations = e.loops;
+			LOOPS = e.loops;
+			console.log(this.configs.train_config.iterations);
+			console.log(LOOPS);
 			await this.network.train(e.trains, this.configs.train_config);
 			return {error: false, init: bufferInitLoss, final: bufferFinalLoss, loops: LOOPS};
 		} catch(exception) {

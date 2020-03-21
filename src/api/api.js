@@ -13,9 +13,6 @@ const logger = require(`${CONSTANTS.src}/logger/logger.js`);
 
 
 class Api {
-	constructor() {
-
-	}
 	getGithubFile(e, callback) {
 		if (e.author === "undefined" || e.repo === "undefined" ||e.filename === "undefined")
 			return "ERR! missing params"

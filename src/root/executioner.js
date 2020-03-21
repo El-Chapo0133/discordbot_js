@@ -4,6 +4,7 @@
  * Description : Execute commands from root.js
  */
 
+
 const ytdl = require('ytdl-core');
 const tenorjs = require('tenorjs').client({
 	"Key": "AP6FGDBWE5CC",
@@ -13,19 +14,26 @@ const tenorjs = require('tenorjs').client({
 	"DateFormat": "D/MM/YYYY - H:mm:ss A"
 });
 const cron = require('node-cron');
+const YtApi = require('youtube-node');
+const ytapi = new YtApi();
 
 const CONSTANTS = require(`${__dirname}/../../constants.js`);
 const api = require(`${CONSTANTS.src}/api/api.js`);
 const fileSystem = require(`${CONSTANTS.src}/fileSystem/fileSystem.js`);
 const queue = require(`${CONSTANTS.src}/music/musicQueue.js`);
 const brainjs = require(`${CONSTANTS.src}/deepl/brain.js`);
+const DEEPL_DEFAULT_LOOPS = 5000;
 
 const urlApiCovid = "https://coronavirus-tracker-api.herokuapp.com/v2/locations";
+let YTAPIKEY = "";
+fileSystem.readFile(`${CONSTANTS.resources}/data_bot.json`, (bot_data) => {
+	ytapi.setKey(bot_data.toJson().google_api_key);
+});
 
 let BANNEDFUNCTIONS;
 let bufferConnection = null;
 let bufferVoiceChannel = null;
-let bufferChannel = null;
+let bufferChannels = null;
 
 fileSystem.readFile(`${CONSTANTS.resources}/static.json`, (data) => {
 	BANNEDFUNCTIONS = (data.toJson().banned_functions);
@@ -35,9 +43,6 @@ fileSystem.readFile(`${CONSTANTS.resources}/static.json`, (data) => {
 // Ex: a function is named "ping", then you can type "!ping" to the bot
 // if you want to have a function that couldn't called with bot, create a new class or a new function beside the class Executionner
 class Executioner {
-	constructor() {
-
-	}
 	ping(e) {
 		e.channel.send('Pong!');
 		return;
@@ -87,46 +92,46 @@ class Executioner {
 		});
 		return e.channel.send("```" + toshow + "```");
 	}
-	play(e) {
-		const music = e.params.music;
-		const voiceChannel = e.member.voiceChannel;
-		if (!voiceChannel) {
-			return e.channel.send("You must be in a channel");
-		} else {
-			bufferVoiceChannel = voiceChannel;
-			ytdl.getInfo(music).then((songInfo) => {
-				//console.log({songInfo: songInfo});
-				e.channel.send(`\`\`\`added to queue:\n'${songInfo.title}'\nsong in queue: ${queue.length() + 1}\`\`\``)
-				if (queue.isEmpty()) {
-					try {
-						voiceChannel.join().then((connection) => {
-							bufferConnection = connection;
-							queue.add({
-								title: songInfo.title,
-								url: songInfo.video_url,
-								connection: connection,
-								voiceChannel: voiceChannel
+	async play(e) {
+		setMusicUrl(e).then(music => {
+			const voiceChannel = e.member.voiceChannel;
+			if (!voiceChannel) {
+				return e.channel.send("You must be in a channel");
+			} else {
+				bufferVoiceChannel = voiceChannel;
+				ytdl.getInfo(music).then((songInfo) => {
+					e.channel.send(`\`\`\`added to queue:\n'${songInfo.title}'\nsong in queue: ${queue.length() + 1}\`\`\``)
+					if (queue.isEmpty()) {
+						try {
+							voiceChannel.join().then((connection) => {
+								bufferConnection = connection;
+								queue.add({
+									title: songInfo.title,
+									url: songInfo.video_url,
+									connection: connection,
+									voiceChannel: voiceChannel
+								});
+								playMusic(queue.first())
+							}).catch(err => {
+								console.log(err);
 							});
-							playMusic(queue.first())
-						}).catch(err => {
-							console.log(err);
+						} catch (err) {
+							console.log("err " + err);
+							return;
+						}
+					} else {
+						queue.add({
+							title: songInfo.title,
+							url: songInfo.video_url,
+							connection: bufferConnection,
+							voiceChannel: voiceChannel
 						});
-					} catch (err) {
-						console.log("err " + err);
-						return;
 					}
-				} else {
-					queue.add({
-						title: songInfo.title,
-						url: songInfo.video_url,
-						connection: bufferConnection,
-						voiceChannel: voiceChannel
-					});
-				}
-			}).catch(() => {
-				e.channel.send("Error in music input");
-			});
-		}
+				}).catch(() => {
+					e.channel.send("Error in music input");
+				});
+			}
+		});
 	}
 	skip(e) {
 		try {
@@ -234,24 +239,31 @@ class Executioner {
 		}
 	}
 	startcron(e) {
-		bufferChannel = e.channel;
+		bufferChannels.push(e.channel);
 		cron.schedule('* * 20 * Fri', () => {
-			bufferChannel.send("https://tenor.com/FR5a.gif");
+			bufferChannels.forEach(cell => {
+				cell.send("https://tenor.com/FR5a.gif");
+			});
 		}, {
 			scheduled: true,
 			timezone: "Europe/Berlin"
 		});
 		e.channel.send(`Started cron on channel '${e.channel.name}'`);
 	}
+	stopcron(e) {
+		e.channel.send('Actually not working');
+	}
 	pee(e) {
 		e.channel.send("https://tenor.com/view/pee-gif-5212091");
 	}
 	initdeeplwords(e) {
+		const loops = isUndefined(e.params.loops) ? DEEPL_DEFAULT_LOOPS : e.params.loops;
 		fileSystem.readFile(`${CONSTANTS.resources}/countries.txt`, (data) => {
 			const DATAS = data.split('\n');
 			initBrain({
 				trains: DATAS,
-				channel: e.channel
+				channel: e.channel,
+				loops: loops,
 			});
 		})
 	}
@@ -289,7 +301,7 @@ class Executioner {
 						buffer.recovered += location.latest.recovered;
 					});
 					e.channel.send(`\`\`\`Total values:\nconfirmed: ${buffer.confirmed}\ndeaths: ${buffer.deaths}\nrecovered: ${buffer.recovered}\`\`\``);
-				} else if (isUndefined(e.params.countries)) {
+				} else if (!isUndefined(e.params.countries)) {
 					let buffer = [];
 					const LENGTH = json.locations.length;
 					const countries = e.params.countries.split(' ');
@@ -314,7 +326,7 @@ class Executioner {
 						bufferSend += `> ${cell.country}\n      confirmed: ${cell.latest.confirmed}\n      deaths: ${cell.latest.deaths}\n      recovered: ${cell.latest.recovered}\n`;
 					});
 					e.channel.send(bufferSend);
-				} else if (isUndefined(e.params.country)) {
+				} else if (!isUndefined(e.params.country)) {
 					const LENGTH = json.locations.length;
 					let buffer = {
 						confirmed: 0,
@@ -323,7 +335,6 @@ class Executioner {
 					};
 					json.locations.forEach(location => {
 						if (location.country === e.params.country) {
-							console.log(location);
 							buffer.confirmed += location.latest.confirmed;
 							buffer.deaths += location.latest.deaths;
 							buffer.recovered += location.latest.recovered;
@@ -343,6 +354,21 @@ class Executioner {
 	}
 }
 
+async function setMusicUrl(e) {
+	if (!isUndefined(e.params.url)) {
+		return e.params.url;
+	} else if (!isUndefined(e.params.query)) {
+		return new Promise((resolve, reject) => {
+			ytapi.search(e.params.query, 2, (err, result) => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve(`https://www.youtube.com/watch?v=${result.items[1].id.videoId}`);
+				}
+			});
+		});
+	}
+}
 function countryHas(array, input) {
 	let buffer = false;
 	array.forEach(cell => {
@@ -354,9 +380,9 @@ function countryHas(array, input) {
 function isUndefined(input) {
 	try {
 		const temp = input.toString();
-		return true;
-	} catch {
 		return false;
+	} catch {
+		return true;
 	}
 }
 function isStringEqualTrue(input) {
@@ -410,7 +436,7 @@ function getAllProperties(obj) {
 async function initBrain(e) {
 	brainjs.init();
 	//brainjs.compile();
-	brainjs.train({trains: e.trains}).then((result) => {
+	brainjs.train({trains: e.trains, loops: e.loops}).then((result) => {
 		if (result.error)
 			e.channel.send("Error on training [brain.js]");
 		else
