@@ -24,7 +24,7 @@ const queue = require(`${CONSTANTS.src}/music/musicQueue.js`);
 const brainjs = require(`${CONSTANTS.src}/deepl/brain.js`);
 const DEEPL_DEFAULT_LOOPS = 5000;
 
-const urlApiCovid = "https://coronavirus-tracker-api.herokuapp.com/v2/locations";
+const urlApiCovid = "https://coronavirus-19-api.herokuapp.com/countries";
 let YTAPIKEY = "";
 fileSystem.readFile(`${CONSTANTS.resources}/data_bot.json`, (bot_data) => {
 	ytapi.setKey(bot_data.toJson().google_api_key);
@@ -186,13 +186,13 @@ class Executioner {
 		}
 	}
 	disconnect(e) {
-		queue.clear();
 		bufferVoiceChannel.leave();
+		queue.clear();
 		return;
 	}
 	dc(e) {
-		queue.clear();
 		bufferVoiceChannel.leave();
+		queue.clear();
 		return;
 	}
 	np(e) {
@@ -257,14 +257,15 @@ class Executioner {
 		e.channel.send("https://tenor.com/view/pee-gif-5212091");
 	}
 	initdeeplwords(e) {
-		const loops = isUndefined(e.params.loops) ? DEEPL_DEFAULT_LOOPS : e.params.loops;
-		fileSystem.readFile(`${CONSTANTS.resources}/countries.txt`, (data) => {
-			const DATAS = data.split('\n');
+		//const loops = isUndefined(e.params.loops) ? DEEPL_DEFAULT_LOOPS : e.params.loops;
+		fileSystem.readFile(`${CONSTANTS.resources}/brain.json`, (data) => {
+			/*const DATAS = data.split('\n').parse(0, 5000);
 			initBrain({
 				trains: DATAS,
 				channel: e.channel,
 				loops: loops,
-			});
+			});*/
+			loadBrain(JSON.parse(data.toString()));
 		})
 	}
 	getword(e) {
@@ -278,76 +279,88 @@ class Executioner {
 				const json = JSON.parse(result);
 				if (isStringEqualTrue(e.params.getCountries)) {
 					let bufferSend = [];
-					const LENGTH = json.locations.length;
+					const LENGTH = json.length;
 					for (let index = 0; index < LENGTH; index++) {
-						if (bufferSend.has(json.locations[index].country))
+						if (bufferSend.has(json[index].country))
 							continue;
-						bufferSend.push(json.locations[index].country);
+						bufferSend.push(json[index].country);
 					}
 					let buffer = "";
-					bufferSend.forEach(cell => {
+					bufferSend.sort().forEach(cell => {
 						buffer += `${cell}-`;
 					});
 					e.channel.send(`\`\`\`${buffer.substring(0, buffer.length - 1)}\`\`\``);
 				} else if (isStringEqualTrue(e.params.all)) {
-					let buffer = {
-						confirmed: 0,
-						deaths: 0,
-						recovered: 0,
-					};
-					json.locations.forEach(location => {
-						buffer.confirmed += location.latest.confirmed;
-						buffer.deaths += location.latest.deaths;
-						buffer.recovered += location.latest.recovered;
-					});
-					e.channel.send(`\`\`\`Total values:\nconfirmed: ${buffer.confirmed}\ndeaths: ${buffer.deaths}\nrecovered: ${buffer.recovered}\`\`\``);
+					e.channel.send(`\`\`\`Total values:\nconfirmed: ${json[0].cases}\ndeaths: ${json[0].deaths}\nrecovered: ${json[0].recovered}\`\`\``);
 				} else if (!isUndefined(e.params.countries)) {
 					let buffer = [];
-					const LENGTH = json.locations.length;
+					const LENGTH = json.length;
 					const countries = e.params.countries.split(' ');
 					for (let i = 0; i < LENGTH; i++) {
-						if (countries.has(json.locations[i].country)) {
-							if (!countryHas(buffer, json.locations[i].country)) {
-								buffer.push(json.locations[i]);
-								continue;
-							}
-							for (let index = 0; index < buffer.length; index++) {
-								if (buffer[index].country === json.locations[i].country) {
-									buffer[index].latest.confirmed += json.locations[i].latest.confirmed;
-									buffer[index].latest.deaths += json.locations[i].latest.deaths;
-									buffer[index].latest.recovered += json.locations[i].latest.recovered;
-									break;
-								}
-							}
+						if (countries.has(json[i].country)) {
+							buffer.push(json[i]);
+							continue;
 						}
 					};
 					let bufferSend = "";
 					buffer.forEach(cell => {
-						bufferSend += `> ${cell.country}\n      confirmed: ${cell.latest.confirmed}\n      deaths: ${cell.latest.deaths}\n      recovered: ${cell.latest.recovered}\n`;
+						bufferSend += `> ${cell.country}\n      confirmed: ${cell.cases}\n      deaths: ${cell.deaths}\n      recovered: ${cell.recovered}\n`;
 					});
 					e.channel.send(bufferSend);
 				} else if (!isUndefined(e.params.country)) {
-					const LENGTH = json.locations.length;
+					const LENGTH = json.length;
 					let buffer = {
 						confirmed: 0,
 						deaths: 0,
 						recovered: 0,
 					};
-					json.locations.forEach(location => {
-						if (location.country === e.params.country) {
-							buffer.confirmed += location.latest.confirmed;
-							buffer.deaths += location.latest.deaths;
-							buffer.recovered += location.latest.recovered;
+					for (let index = 0; index < LENGTH; index++) {
+						if (json[index].country === e.params.country) {
+							buffer.confirmed = json[index].cases;
+							buffer.deaths = json[index].deaths;
+							buffer.recovered = json[index].recovered;
+							break;
 						}
-					});
+					};
 					e.channel.send(`> ${e.params.country}\n      confirmed: ${buffer.confirmed}\n      deaths: ${buffer.deaths}\n      recovered: ${buffer.recovered}`);
 				} else {
-					e.channel.send("Please choose one of those : [all,countries,country]");
+					e.channel.send("Please choose one of those : [all,getCountries,countries,country]");
 				}
 			});
 		} catch(exception) {
 			console.log({
 				title: 'Error on covid19 function',
+				exception: exception,
+			});
+		}
+	}
+	wiki(e) {
+		const language = e.params.lang === undefined ? 'fr' : e.params.lang;
+		try {
+			const URL = `https://${language}.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro&explaintext&redirects=1&titles=${e.params.page}`;
+			api.getFromUrl({url: URL}).then(result => {
+				let toPrint;
+				const json = result.toJson();
+				const output = json.query.pages[Object.keys(json.query.pages)[0]].extract;
+				if (output === undefined || output === '') {
+					e.channel.send("Wiki page not fount [404]");
+					return;
+				}
+				if (output.length > 1999)
+					toPrint = output.substring(0,1996) + "...";
+				else
+					toPrint = output;
+				e.channel.send(toPrint);
+			}).catch(ex => {
+				console.log({
+					title: 'Error On wiki api function',
+					exception: ex,
+				});
+				e.channel.send("Input not valid");
+			});
+		} catch(exception) {
+			console.log({
+				title: 'Error on wiki function',
 				exception: exception,
 			});
 		}
@@ -436,13 +449,17 @@ function getAllProperties(obj) {
 async function initBrain(e) {
 	brainjs.init();
 	//brainjs.compile();
-	brainjs.train({trains: e.trains, loops: e.loops}).then((result) => {
+	brainjs.train({trains: e.trains, loops: e.loops, channel: e.channel}).then((result) => {
 		if (result.error)
 			e.channel.send("Error on training [brain.js]");
 		else
 			e.channel.send("```Model trainied [brain.js] in " + `${result.loops} loops\ninit loss: ${result.init}\nfinal loss: ${result.final}` + "```");
 		return;
 	});
+}
+function loadBrain(json) {
+	brainjs.init();
+	brainjs.fromJson({json: json});
 }
 
 module.exports = new Executioner();

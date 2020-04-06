@@ -176,3 +176,20 @@ Array.prototype.getMedian = function() {
 		return array[(LENGTH + 1) / 2];
 	}
 }
+Array.prototype.repeat = function(loops) {
+	const INIT = this.valueOf();
+	let toReturn = [];
+	for (let index = 0; index < loops; index++) {
+		toReturn = [...toReturn, ...INIT];
+	}
+	return toReturn;
+}
+Array.prototype.removeLastCell = function() {
+	const _$ = this.valueOf();
+	const LENGTH = _$.length - 1;
+	return _$.map((cell, i) => {
+		console.log(i);
+		if (i != LENGTH)
+			return cell;
+	});
+}

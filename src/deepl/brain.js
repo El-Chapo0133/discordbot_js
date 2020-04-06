@@ -5,11 +5,15 @@
  * Doc : https://github.com/BrainJS/brain.js
  */
 
+const CONSTANTS = require(`${__dirname}/../../constants.js`);
+const fs = require('fs');
+const LOGPERIOD = 1;
+
 const default_configs = {
 	brain_type: "recurrent.LSTM",
 	network_config: {
 		binaryTresh: 0.5,
-		hiddenLayers: [100, 50, 20],
+		//hiddenLayers: [154, 100, 50, 20],
 		activation: 'relu', // from ['sigmoid', 'relu', 'leaky-relu', 'tanh']
 		leakyReluAlpha: 0.01,
 		outputSize: 1,
@@ -20,13 +24,13 @@ const default_configs = {
 		iterations: 0,
 		errorThresh: 0.005,
 		log: true,
-		logPeriod: 1,
+		logPeriod: LOGPERIOD,
 		callback: onBatchEnd,
-		callbackPeriod: 1,
+		callbackPeriod: LOGPERIOD,
 	}
 }
 
-let LOOPS = 0;
+let LOOPS = 1000;
 
 const brain = require('brain.js');
 
@@ -34,13 +38,17 @@ let bufferInitLoss = 0;
 let bufferFinalLoss = 0;
 let index = 0;
 
+let network;
+
+let channel;
+
 class Brain {
 	constructor() {
 		this.network = null;
 		this.configs = default_configs;
 	}
 	init() {
-		this.network = new brain.recurrent.LSTM(this.configs.network_config);
+		network = new brain.recurrent.LSTM(this.configs.network_config);
 	}
 	reconfig(e) {
 		// e must be a json
@@ -55,20 +63,29 @@ class Brain {
 			this.network = brain.recurrent.LTSM();
 	}
 	async train(e) {
+		channel = e.channel;
 		try {
 			this.configs.train_config.iterations = e.loops;
 			LOOPS = e.loops;
-			console.log(this.configs.train_config.iterations);
-			console.log(LOOPS);
-			await this.network.train(e.trains, this.configs.train_config);
+			await network.train(e.trains, this.configs.train_config);
+			const json = (JSON.stringify(network.toJSON()));
+			write(`${CONSTANTS.resources}/brain.json`, json.toString())
+			channel = null;
 			return {error: false, init: bufferInitLoss, final: bufferFinalLoss, loops: LOOPS};
 		} catch(exception) {
+			channel = null;
 			console.log({exception: exception});
 			return {error: true};
 		}
 	}
 	async predict(e) {
-		return this.network.run(e.value);
+		return network.run(e.value);
+	}
+	toJson(e) {
+		network.toJSON(e.filename);
+	}
+	fromJson(e) {
+		network.fromJSON(e.json);
 	}
 }
 
@@ -77,7 +94,20 @@ function onBatchEnd(input) {
 		bufferInitLoss = input.error;
 	else if (index == LOOPS - 1)
 		bufferFinalLoss = input.error;
-	index++;
+	index += LOGPERIOD;
+}
+function write(filename, input) {
+	return new Promise((resolve, reject) => {
+		fs.writeFile(filename, input, (err) => {
+			if (err) {
+				console.log(err);
+				reject(err);
+			} else {
+				console.log("file Writed");
+				resolve();
+			}
+		})
+	})
 }
 
 module.exports = new Brain();

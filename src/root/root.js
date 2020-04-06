@@ -17,11 +17,15 @@ class Root {
 		const content_splitted = e.content.split('>');
 		let params = {};
 		for (var index = 1; index < content_splitted.length; index++) {
-			const param = content_splitted[index].split(' ')
-			//console.log("[[]]" + param.collapseWith(' '));
-			const paramName = param[0]
+			let paramValue;
+			const param = content_splitted[index].split(' ');
+			const paramName = param[0];
 			param.shift();
-			const paramValue = param.collapseWith(' ');
+			if (param.last() === '')
+				paramValue = param[0];
+			else {
+				paramValue = param;
+			}
 			params[paramName] = paramValue;
 		}
 		return {

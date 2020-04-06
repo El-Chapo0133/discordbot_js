@@ -6,6 +6,7 @@
 
 const http = require('http');
 const https = require('https');
+const pageviews = require('pageviews');
 
 const GithubContent = require('github-content');
 const CONSTANTS = require(`${__dirname}/../../constants.js`);
@@ -30,7 +31,7 @@ class Api {
 			}
 		});
 	}
-	async getFromUrl(e) {
+	getFromUrl(e) {
 		return new Promise((resolve, reject) => {
 			const client = e.url.toString().indexOf('https') === 0 ? https : http;
 			client.get(e.url, res => {
@@ -43,6 +44,21 @@ class Api {
 				});
 			}).on('error', err => {
 				reject(err);
+			});
+		});
+	}
+	wikiPage(e) {
+		const dateNow = new Date(new Date() - 3 * 24 * 60 * 60 * 1000);
+		return new Promise((resulve, reject) => {
+			pageviews.getPerArticlePageviews({
+				article: e.input,
+				project: 'en.wikipedia',
+				start: dateNow,
+				end: dateNow,
+			}).then(result => {
+				console.log(result);
+			}).catch(ex => {
+				console.log(ex);
 			});
 		});
 	}

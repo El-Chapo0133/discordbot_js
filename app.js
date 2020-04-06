@@ -27,8 +27,17 @@ fileSystem.readFile(`${CONSTANTS.resources}/data_bot.json`, (bot_data) => {
 	bot.login(bot_data.toJson().bot_token);
 });
 
+
+
 bot.on('ready', () => {
 	// Bot online
+	bot.user.setStatus('available');
+	bot.user.setPresence({
+		activity: {
+			name: "FANTA BLEU",
+		},
+		status: 'online'
+	});
 	logger.write("bot online");
 });
 bot.on('message', (e) => {
